@@ -15,8 +15,8 @@ export class GrowthDB extends Dexie {
   }
 }
 export const db=new GrowthDB()
-export async function deleteEntry(id:string){await db.transaction('rw',db.entries,db.treasures,async()=>{await db.entries.delete(id);await db.treasures.where('sourceEntryId').equals(id).delete()})}
-export async function deleteWeekly(id:string){await db.transaction('rw',db.weeklyReviews,db.experiments,async()=>{await db.weeklyReviews.delete(id);await db.experiments.where('weeklyReviewId').equals(id).delete()})}
+export async function deleteEntry(id:string,database=db){await database.transaction('rw',database.entries,database.treasures,async()=>{await database.entries.delete(id);await database.treasures.where('sourceEntryId').equals(id).delete()})}
+export async function deleteWeekly(id:string,database=db){await database.transaction('rw',database.weeklyReviews,database.experiments,async()=>{await database.weeklyReviews.delete(id);await database.experiments.where('weeklyReviewId').equals(id).delete()})}
 export async function exportBackup(database=db):Promise<Backup>{return {app:'rolan-growth-os',version:1,exportedAt:new Date().toISOString(),data:{dailyReviews:await database.dailyReviews.toArray(),weeklyReviews:await database.weeklyReviews.toArray(),experiments:await database.experiments.toArray(),entries:await database.entries.toArray(),treasures:await database.treasures.toArray(),settings:await database.settings.toArray()}}}
 
 const newer=(incoming:BaseRecord,existing:BaseRecord)=>Date.parse(incoming.updatedAt)>Date.parse(existing.updatedAt)

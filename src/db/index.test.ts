@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
 import { afterEach,expect,test } from 'vitest'
-import { GrowthDB,exportBackup,importBackup } from './index'
+import { GrowthDB,exportBackup,importBackup,deleteEntry,deleteWeekly } from './index'
 import type { DailyReview,Experiment,GrowthEntry,WeeklyReview,Treasure } from '../types'
 const now='2026-11-02T10:00:00.000Z'
 const base=(id:string)=>({id,createdAt:now,updatedAt:now})
@@ -17,3 +17,4 @@ test('records survive a database reopen and backup restores all linked records',
 test('merge keeps newer local record and adds missing records',async()=>{const d=make();await d.dailyReviews.add({...daily,good:'后来修改',updatedAt:'2026-11-03T10:00:00.000Z'});const backup={app:'rolan-growth-os',version:1,exportedAt:now,data:{dailyReviews:[daily],weeklyReviews:[],experiments:[],entries:[entry],treasures:[],settings:[]}};await importBackup(backup,'merge',d);expect((await d.dailyReviews.get(daily.id))?.good).toBe('后来修改');expect(await d.entries.count()).toBe(1);d.close()})
 test('invalid backup is rejected before existing data changes',async()=>{const d=make();await d.dailyReviews.add(daily);const backup={app:'rolan-growth-os',version:1,exportedAt:now,data:{dailyReviews:[{...daily,moods:['未知心情']}],weeklyReviews:[],experiments:[],entries:[],treasures:[],settings:[]}};await expect(importBackup(backup,'replace',d)).rejects.toThrow();expect(await d.dailyReviews.count()).toBe(1);d.close()})
 test('merge does not duplicate a day imported under another ID',async()=>{const d=make();await d.dailyReviews.add(daily);const incoming={...daily,id:'other-id',good:'更新的复盘',updatedAt:'2026-11-04T10:00:00.000Z'};await importBackup({app:'rolan-growth-os',version:1,exportedAt:now,data:{dailyReviews:[incoming],weeklyReviews:[],experiments:[],entries:[],treasures:[],settings:[]}},'merge',d);expect(await d.dailyReviews.count()).toBe(1);expect((await d.dailyReviews.toArray())[0].good).toBe('更新的复盘');d.close()})
+test('deleting linked records removes their dependent treasure and experiment',async()=>{const d=make();await d.entries.add(entry);await d.treasures.add(treasure);await d.weeklyReviews.add(weekly);await d.experiments.add(experiment);await deleteEntry(entry.id,d);await deleteWeekly(weekly.id,d);expect(await d.entries.count()).toBe(0);expect(await d.treasures.count()).toBe(0);expect(await d.weeklyReviews.count()).toBe(0);expect(await d.experiments.count()).toBe(0);d.close()})
