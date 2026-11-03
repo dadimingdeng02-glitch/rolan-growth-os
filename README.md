@@ -2,6 +2,8 @@
 
 面向孩子的本地优先成长复盘网站。React、TypeScript、Vite、Tailwind CSS、Dexie 和 React Router。无账号、广告、追踪和付费 API。
 
+“成长领域 → 兴趣与创造 → 兴趣探索图鉴”内置 420 个具体兴趣点，内容来自 `src/data/interests.json`。目录本身是只读内容；孩子可从任一项目新建自己的体验记录，记录仍保存在本地 IndexedDB，并包含在 JSON 备份中。
+
 ## 本地运行
 
 使用 Node.js 22：
